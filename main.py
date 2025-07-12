@@ -96,31 +96,29 @@ def main(args):
     gt_save_folder = save_folder + '/gt'
     pred_save_folder_dice = save_folder + '/predict/dice'
     pred_save_folder_hausdorff = save_folder + '/predict/hausdorff'
-    
+
+    def create_dirs(*dirs):
+        for d in dirs:
+            os.makedirs(d, exist_ok=True)
+
     if args.distributed:
         if local_rank == 0:
-            if not os.path.exists(save_folder):
-                os.makedirs(save_folder)
-            if not os.path.exists(weight_save_folder):
-                os.makedirs(weight_save_folder)
-            if not os.path.exists(gt_save_folder):
-                os.makedirs(gt_save_folder)
-            if not os.path.exists(pred_save_folder_dice):
-                os.makedirs(pred_save_folder_dice)
-            if not os.path.exists(pred_save_folder_hausdorff):
-                os.makedirs(pred_save_folder_hausdorff)
+            create_dirs(
+                save_folder,
+                weight_save_folder,
+                gt_save_folder,
+                pred_save_folder_dice,
+                pred_save_folder_hausdorff
+            )
         torch.distributed.barrier()
     else:
-        if not os.path.exists(save_folder):
-            os.makedirs(save_folder)
-        if not os.path.exists(weight_save_folder):
-            os.makedirs(weight_save_folder)
-        if not os.path.exists(gt_save_folder):
-            os.makedirs(gt_save_folder)
-        if not os.path.exists(pred_save_folder_dice):
-            os.makedirs(pred_save_folder_dice)
-        if not os.path.exists(pred_save_folder_hausdorff):
-            os.makedirs(pred_save_folder_hausdorff)
+        create_dirs(
+            save_folder,
+            weight_save_folder,
+            gt_save_folder,
+            pred_save_folder_dice,
+            pred_save_folder_hausdorff
+        )
             
     modality_lst = sorted(args.modality)
     modality_num = len(modality_lst)
@@ -269,7 +267,21 @@ def main(args):
             flops, params = profile(model.module, (input,))
             print('Params = ' + str(params/1000**2) + 'M')
             print('FLOPs = ' + str(flops/1000**3) + 'G')
-        
+            """
+            The thop.profile() call creates a forward pass mock 
+            that may cause some internal modules (or buffers) to 
+            move back to CPU, depending on how they are defined 
+            (e.g., in BatchNorm, LayerNorm, or custom buffer logic). 
+            This happens because profile() creates new inputs and sometimes 
+            doesn't fully respect the original model device context.
+            
+            ERROR: RuntimeError: module must have its parameters and buffers on device cuda:0 (device_ids[0]) but found one of them on device: cpu
+            
+            MODEL BUTTER IS IN CPU
+            """
+            model.module.to(device)
+
+
         if args.distributed:
             if local_rank==0:
                 get_parameter_number(model)
