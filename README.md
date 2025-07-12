@@ -46,3 +46,16 @@ BraTS2020
 
 ## 
 If you find our project useful, please consider starring it  : )
+
+##
+Docker build cmd
+`docker build -t eoformer:v1 .`
+Docker Run cmd
+
+`
+docker run --gpus all \
+    --shm-size=36g \
+    -v /home/jche4519/external-device/Mphil/datasets/BraTS2021_Training_Data:/app/datasets/BraTS2021_Training_Data \
+    -v /home/jche4519/external-device/Mphil/code/EoFormer:/app \
+    -it eoformer:v1 /bin/bash
+``
