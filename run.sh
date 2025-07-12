@@ -5,9 +5,9 @@ do
 for wd in 1e-5
 do
 
-python -m torch.distributed.run --nproc_per_node=2 main.py \
---distributed \
---data_path BraTS2020 \
+python3 -m torch.distributed.run --nproc_per_node=2 main.py \
+--json brats2021.json \
+--data_path /app/datasets/BraTS2021_Training_Data \
 --dataset brats \
 --modality T1_Ax T1_E_Ax T2_Ax T2_Flair_Ax \
 --model eoformer \
