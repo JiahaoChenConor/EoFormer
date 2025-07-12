@@ -256,20 +256,21 @@ class Block(nn.Module):
             if res_scale_init_value else nn.Identity()
         
     def forward(self, x):
-        if self.position_embedding:
-            x = self.res_scale1(x) + \
-                self.layer_scale1(
-                    self.drop_path1(
-                        self.token_mixer(self.norm1(self.position_embedding(x)))
-                    )
+        # if self.position_embedding:
+        #     x = self.res_scale1(x) + \
+        #         self.layer_scale1(
+        #             self.drop_path1(
+        #                 self.token_mixer(self.norm1(self.position_embedding(x)))
+        #             )
+        #         )
+        # else:
+        x = self.res_scale1(x) + \
+            self.layer_scale1(
+                self.drop_path1(
+                    self.token_mixer(self.norm1(x))
                 )
-        else:
-            x = self.res_scale1(x) + \
-                self.layer_scale1(
-                    self.drop_path1(
-                        self.token_mixer(self.norm1(x))
-                    )
-                )
+            )
+
         x = self.res_scale2(x) + \
             self.layer_scale2(
                 self.drop_path2(
@@ -339,7 +340,7 @@ class Encoder(nn.Module):
                 drop_path=dp_rates[cur + j],
                 layer_scale_init_value=layer_scale_init_values[i],
                 res_scale_init_value=res_scale_init_values[i],
-                position_embedding=position_embeddings[i][j],
+                # position_embedding=position_embeddings[i][j],
                 ) for j in range(depths[i])]
             )
             self.stages.append(stage)
@@ -435,7 +436,7 @@ class Decoder(nn.Module):
                 drop_path=dp_rates[cur + j],
                 layer_scale_init_value=layer_scale_init_values[i],
                 res_scale_init_value=res_scale_init_values[i],
-                position_embedding=position_embeddings[i][j],
+                # position_embedding=position_embeddings[i][j],
                 ) for j in range(depths[i])]
             )
             self.stages.append(stage)
