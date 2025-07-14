@@ -25,10 +25,10 @@ python3 -m torch.distributed.run --nproc_per_node=2 main.py \
 --weight_decay $wd \
 --num_workers 8 \
 --batch_size 2 \
---n_epochs 300 \
---warmup_epochs 50 \
---val_every 10 \
---save_folder "/output" \
+--n_epochs 2 \
+--warmup_epochs 0 \
+--val_every 1 \
+--save_folder "./output" \
 --manual_seed 4294967295 \
 --test_seed 10 \
 --gpu_id 0 1 \

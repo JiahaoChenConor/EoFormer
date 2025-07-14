@@ -342,8 +342,8 @@ def main(args):
             if args.distributed:
                 if local_rank == 0:
                     print("=> no checkpoint found")
-                    best_dice = 0.5 if args.n_epochs > 50 else 0.0001
-                    best_hausdorff = 50 if args.n_epochs > 50 else 999.99
+                    best_dice = 0 if args.n_epochs > 50 else 0.0001
+                    best_hausdorff = float('inf') if args.n_epochs > 50 else 999.99
                     best_dice_epoch = 0
                     best_hausdorff_epoch = 0
                     best_dice_cor_hausdorff = 999
@@ -394,7 +394,7 @@ def main(args):
                         print(f"epoch {epoch} valid loss: {valid_loss:.4f}")
                         print(f"Dice mean: {valid_mean_dice:.4f}, WT: {valid_dice_wt:.4f}, TC: {valid_dice_tc:.4f}, ET: {valid_dice_et:.4f}")
                         print(f"Hausdorff mean: {valid_mean_hausdorff:.4f}, WT: {valid_hausdorff_wt:.4f}, TC: {valid_hausdorff_tc:.4f}, ET: {valid_hausdorff_et:.4f}")
-                        if epoch > min_epoch and valid_mean_dice > best_dice:  # 保存在验证集上当前最佳dice模型
+                        if valid_mean_dice > best_dice:  # 保存在验证集上当前最佳dice模型
                             best_dice = valid_mean_dice
                             best_dice_cor_hausdorff = valid_mean_hausdorff
                             best_dice_epoch = epoch
@@ -413,7 +413,7 @@ def main(args):
                     print(f"epoch {epoch} valid loss: {valid_loss:.4f}")
                     print(f"Dice mean: {valid_mean_dice:.4f}, WT: {valid_dice_wt:.4f}, TC: {valid_dice_tc:.4f}, ET: {valid_dice_et:.4f}")
                     print(f"Hausdorff mean: {valid_mean_hausdorff:.4f}, WT: {valid_hausdorff_wt:.4f}, TC: {valid_hausdorff_tc:.4f}, ET: {valid_hausdorff_et:.4f}")
-                    if epoch > min_epoch and valid_mean_dice > best_dice:  # 保存在验证集上当前最佳dice模型
+                    if valid_mean_dice > best_dice:  # 保存在验证集上当前最佳dice模型
                         best_dice = valid_mean_dice
                         best_dice_cor_hausdorff = valid_mean_hausdorff
                         best_dice_epoch = epoch
