@@ -206,7 +206,7 @@ def inference(model, model_inferer, data_loader, saver, device='cuda'):
             seg_img = pred_masks[0, 1]
             # seg_img[np.where(pred_masks[0, 1] == 1)] = 1
             seg_img[np.where(pred_masks[0, 0] == 1)] = 2
-            seg_img[np.where(pred_masks[0, 2] == 1)] = 3
+            seg_img[np.where(pred_masks[0, 2] == 1)] = 4
             saver(seg_img)
             n_ctr += 1
             

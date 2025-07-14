@@ -27,8 +27,9 @@ from thop import profile
 from optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 
 from dataset.dataset import get_dataset_brats
+from dataset.dataset import get_inference_dataset_brats
 from utils.utils import SequentialDistributedSampler
-from trainer import train, evaluate, test
+from trainer import train, evaluate, test, inference
 
 from monai.apps import DecathlonDataset
 from monai.utils.misc import set_determinism
@@ -149,8 +150,18 @@ def main(args):
             ConvertToMultiChannelBasedOnBratsClassesd(keys="label"),
             NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
             ToTensord(keys=["image", "label"]),
-            ])
-        }
+            ]),
+
+        'inference': Compose([
+            LoadImaged(keys=["image"]),
+            EnsureChannelFirstd(keys="image"),
+            EnsureTyped(keys=["image"]),
+            NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
+            ToTensord(keys=["image"]),
+        ])
+
+
+    }
 
     with open(f"{save_folder}/test_log.txt", "a") as f:
 
@@ -162,7 +173,13 @@ def main(args):
                 data_path = args.data_path,
                 json_file = args.json,
                 transform=transform_brats20)
-            
+
+            inference_dataset, inference_list = get_inference_dataset_brats(
+                data_path=args.data_path_predict,
+                json_file=args.json,
+                transform=transform_brats20
+            )
+
             if args.distributed:
                 train_sampler = DistributedSampler(train_dataset)
                 train_loader = DataLoader(train_dataset,
@@ -195,7 +212,15 @@ def main(args):
                                     pin_memory=True,
                                     num_workers=args.num_workers
                                     )
-            
+
+            inference_loader = DataLoader(
+                                    inference_dataset,
+                                    batch_size=1,
+                                    shuffle=False,
+                                    pin_memory=True,
+                                    num_workers=args.num_workers
+                                    )
+
         if args.distributed:
             if local_rank==0:
                 print('train dataset len:', len(train_dataset))
@@ -492,6 +517,29 @@ def main(args):
             print(f"Hausdorff mean: {test_mean_hausdorff:.4f}, WT: {test_hausdorff_wt:.4f}, TC: {test_hausdorff_tc:.4f}, ET: {test_hausdorff_et:.4f}")
             f.write(f"dice mean: {test_mean_dice:.4f}, WT: {test_dice_wt:.4f}, TC: {test_dice_tc:.4f}, ET: {test_dice_et:.4f}\n")
             f.write(f"Hausdorff mean: {test_mean_hausdorff:.4f}, WT: {test_hausdorff_wt:.4f}, TC: {test_hausdorff_tc:.4f}, ET: {test_hausdorff_et:.4f}\n")
+
+        # Final inference-only prediction phase
+        if args.distributed:
+            if local_rank == 0:
+                print(' - - - - - inference-only prediction phase - - - - - ')
+                nii_saver_pred_only = SaveImage(
+                    output_dir=os.path.join(save_folder, "predict/infer"),
+                    output_postfix="pred",
+                    output_ext=".nii.gz",
+                    resample=True
+                )
+                inference(model, model_inferer, inference_loader, nii_saver_pred_only, local_rank)
+            torch.distributed.barrier()
+        else:
+            print(' - - - - - inference-only prediction phase - - - - - ')
+            nii_saver_pred_only = SaveImage(
+                output_dir=os.path.join(save_folder, "predict/infer"),
+                output_postfix="pred",
+                output_ext=".nii.gz",
+                resample=True
+            )
+            inference(model, model_inferer, inference_loader, nii_saver_pred_only, device)
+
     f.close()
 
 if __name__ == '__main__':

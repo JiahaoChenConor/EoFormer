@@ -58,4 +58,12 @@ docker run --gpus all \
     -v /home/jche4519/external-device/Mphil/datasets/BraTS2021_Training_Data:/app/datasets/BraTS2021_Training_Data \
     -v /home/jche4519/external-device/Mphil/code/EoFormer:/app \
     -it eoformer:v1 /bin/bash
-``
+`
+`
+docker run --gpus all \
+    --shm-size=36g \
+    -v /home/jche4519/external-device/Mphil/datasets/BraTS2021_Training_Data:/app/datasets/BraTS2021_Training_Data \
+    -v /home/jche4519/external-device/Mphil/datasets/BRATS2023-VAl/ASNR-MICCAI-BraTS2023-GLI-Challenge-ValidationData:/app/datasets/BraTS2021_Val_Data \
+    -v /home/jche4519/external-device/Mphil/code/EoFormer:/app \
+    -it eoformer:v1 /bin/bash
+`

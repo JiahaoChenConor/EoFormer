@@ -24,6 +24,12 @@ def parse_opts():
         default="/data/sd0809/BraTS2020",
         type=str,
         help='Root directory path of data')
+
+    parser.add_argument(
+        '--data_path_predict',
+        default="/data/sd0809/BraTS2020",
+        type=str,
+        help='Root directory path of data')
     
     parser.add_argument(
         '--dice_model_path',

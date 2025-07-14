@@ -8,6 +8,7 @@ do
 python3 -m torch.distributed.run --nproc_per_node=2 main.py \
 --json brats2021.json \
 --data_path /app/datasets/BraTS2021_Training_Data \
+--data_path_predict /app/datasets/BraTS2021_Val_Data \
 --dataset brats \
 --modality T1_Ax T1_E_Ax T2_Ax T2_Flair_Ax \
 --model eoformer \

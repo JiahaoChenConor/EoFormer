@@ -8,43 +8,36 @@ from typing import List, Tuple, Dict
 from monai.data import CacheDataset
 from monai.transforms import Resize, MapTransform
 
-def split_data(datalist, basedir):
-
+def split_data(datalist, basedir, with_infer=False):
     with open(datalist) as f:
         json_data = json.load(f)
 
-    train_data = json_data['train']
-    valid_data = json_data['valid']
-    test_data = json_data['test']
-    
-    train = []
-    valid = []
-    test = []
-    for d in train_data:
-        for k, v in d.items():  
-            if isinstance(d[k], list):
-                d[k] = [os.path.join(basedir, iv) for iv in d[k]]
-            elif isinstance(d[k], str):
-                d[k] = os.path.join(basedir, d[k]) if len(d[k]) > 0 else d[k]
-        train.append(d)
+    def process_split(split):
+        processed = []
+        for d in split:
+            for k, v in d.items():
+                if isinstance(v, list):
+                    d[k] = [os.path.join(basedir, iv) for iv in v]
+                elif isinstance(v, str):
+                    d[k] = os.path.join(basedir, v) if len(v) > 0 else v
+            processed.append(d)
+        return processed
 
-    for d in valid_data:
-        for k, v in d.items():
-            if isinstance(d[k], list):
-                d[k] = [os.path.join(basedir, iv) for iv in d[k]]
-            elif isinstance(d[k], str):
-                d[k] = os.path.join(basedir, d[k]) if len(d[k]) > 0 else d[k]
-        valid.append(d)
-    
-    for d in test_data:
-        for k, v in d.items():
-            if isinstance(d[k], list):
-                d[k] = [os.path.join(basedir, iv) for iv in d[k]]
-            elif isinstance(d[k], str):
-                d[k] = os.path.join(basedir, d[k]) if len(d[k]) > 0 else d[k]
-        test.append(d)
-    return train, valid, test
+    train = process_split(json_data.get('train', []))
+    valid = process_split(json_data.get('valid', []))
+    test  = process_split(json_data.get('test', []))
 
+    if with_infer and 'infer' in json_data:
+        inference = process_split(json_data['infer'])
+        return train, valid, test, inference
+    else:
+        return train, valid, test
+
+
+def get_inference_dataset_brats(data_path: str, json_file: str, transform=None):
+    _, _, _, inference_list = split_data(json_file, data_path, with_infer=True)
+    inference_set = CacheDataset(data=inference_list, cache_rate=0.0, transform=transform['inference'])
+    return inference_set, inference_list
 
 def get_dataset_brats(data_path: str, 
                   json_file: str, 
